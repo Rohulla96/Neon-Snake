@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Snake - Skins Utgåva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            touch-action: manipulation;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            border: 4px solid #334155;
+            box-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
+            image-rendering: pixelated;
+            background-color: #020617;
+        }
+        .control-btn {
+            background: rgba(30, 41, 59, 0.9);
+            border: 2px solid #475569;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            transition: all 0.1s;
+        }
+        .control-btn:active {
+            background: var(--active-color, #22d3ee);
+            color: #0f172a;
+            transform: scale(0.92);
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+        }
+        .skin-option {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .skin-option:hover {
+            transform: scale(1.1);
+        }
+        .skin-selected {
+            outline: 3px solid white;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Header & Score UI -->
+    <div class="text-center mb-6 w-full max-w-md">
+        <h1 class="text-4xl font-black text-cyan-400 mb-2 tracking-tighter neon-text italic uppercase">Snake Neon</h1>
+        <div class="flex justify-between items-center text-slate-300 font-mono text-lg bg-slate-800/80 px-5 py-3 rounded-2xl border border-slate-700 backdrop-blur-sm">
+            <div class="flex flex-col items-start">
+                <span class="text-xs text-slate-500 uppercase font-bold tracking-widest">Poäng</span>
+                <span id="score" class="text-2xl text-cyan-400 font-bold">0</span>
+            </div>
+            <div class="flex flex-col items-end">
+                <span class="text-xs text-slate-500 uppercase font-bold tracking-widest">Rekord</span>
+                <span id="highScore" class="text-2xl text-pink-500 font-bold">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Viewport -->
+    <div class="relative group">
+        <canvas id="gameCanvas" width="400" height="400" class="max-w-full h-auto rounded-xl"></canvas>
+        
+        <!-- Game Over / Start UI Overlay -->
+        <div id="uiOverlay" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center text-center p-6 transition-all rounded-xl border-2 border-slate-700">
+            <div id="startContent">
+                <h2 class="text-5xl font-black text-cyan-400 mb-6 italic tracking-tighter">VÄLJ DITT SKIN</h2>
+                
+                <!-- Skin Selection -->
+                <div class="flex gap-4 mb-8 justify-center">
+                    <div onclick="setSkin('cyan')" id="skin-cyan" class="skin-option skin-selected w-12 h-12 rounded-lg bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]"></div>
+                    <div onclick="setSkin('pink')" id="skin-pink" class="skin-option w-12 h-12 rounded-lg bg-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.5)]"></div>
+                    <div onclick="setSkin('green')" id="skin-green" class="skin-option w-12 h-12 rounded-lg bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"></div>
+                    <div onclick="setSkin('gold')" id="skin-gold" class="skin-option w-12 h-12 rounded-lg bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)]"></div>
+                </div>
+
+                <button onclick="startGame()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black py-4 px-12 rounded-2xl transition-all active:scale-95 shadow-xl shadow-cyan-500/30 uppercase tracking-widest text-xl">
+                    Starta Spel
+                </button>
+            </div>
+
+            <div id="gameOverContent" class="hidden">
+                <h2 class="text-6xl font-black text-pink-500 mb-2 italic tracking-tighter">GAME OVER</h2>
+                <div id="newRecordMsg" class="text-yellow-400 font-bold mb-4 hidden animate-bounce italic text-xl">NYTT REKORD! 🏆</div>
+                <p id="finalScoreMsg" class="text-slate-300 text-xl mb-8">Du fick 0 poäng!</p>
+                <button onclick="showMenu()" class="text-slate-400 hover:text-white mb-4 block w-full text-sm uppercase tracking-widest font-bold">Byt Skin</button>
+                <button onclick="resetGame()" class="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-black py-4 px-10 rounded-2xl transition-all active:scale-95 shadow-xl shadow-pink-500/30 uppercase tracking-widest text-lg">
+                    Spela Igen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation Controls -->
+    <div class="mt-10 grid grid-cols-3 gap-3 w-full max-w-[280px] lg:hidden">
+        <div></div>
+        <button class="control-btn h-16 w-full" onmousedown="changeDirection('UP')" ontouchstart="changeDirection('UP')">▲</button>
+        <div></div>
+        <button class="control-btn h-16 w-full" onmousedown="changeDirection('LEFT')" ontouchstart="changeDirection('LEFT')">◀</button>
+        <button class="control-btn h-16 w-full" onmousedown="changeDirection('DOWN')" ontouchstart="changeDirection('DOWN')">▼</button>
+        <button class="control-btn h-16 w-full" onmousedown="changeDirection('RIGHT')" ontouchstart="changeDirection('RIGHT')">▶</button>
+    </div>
+
+    <div class="mt-6 flex flex-col items-center gap-2">
+        <p class="hidden lg:block text-slate-500 text-sm font-medium">
+            Styr med <span class="bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono">Piltangenterna</span>
+        </p>
+    </div>
+
+    <script>
+        // --- LJUDMOTOR ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination
